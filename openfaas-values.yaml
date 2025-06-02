@@ -1,0 +1,8 @@
+functionNamespace: openfaas-fn
+exposeServices: true
+serviceType: NodePort
+rbac: true
+gateway:
+ replicas: 1
+ scaleFromZero: true
+ basicAuth: true

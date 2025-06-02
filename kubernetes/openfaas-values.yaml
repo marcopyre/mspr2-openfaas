@@ -1,0 +1,50 @@
+# Fichier de configuration pour l'installation d'OpenFaaS avec Helm
+
+# Configuration générale
+functionNamespace: openfaas-fn
+exposeServices: true
+serviceType: ClusterIP
+rbac: true
+
+# Configuration du gateway
+gateway:
+  replicas: 1
+  resources:
+    requests:
+      memory: "120Mi"
+      cpu: "50m"
+  readTimeout: 65s
+  writeTimeout: 65s
+  upstreamTimeout: 60s
+  scaleFromZero: true
+  # Activer l'authentification de base
+  basicAuth: true
+
+# Configuration des fonctions
+faasnetes:
+  imagePullPolicy: Always
+  httpProbe: true
+  readTimeout: 60s
+  writeTimeout: 60s
+  setNonRootUser: true
+
+# Configuration du prometheus
+prometheus:
+  create: true
+
+# Configuration du alertmanager
+alertmanager:
+  create: true
+
+# Configuration du nats
+nats:
+  channel: faas-request
+  enableMonitoring: true
+  metrics:
+    enabled: true
+    port: 8222
+
+# Configuration du queue-worker
+queueWorker:
+  replicas: 1
+  ackWait: 60s
