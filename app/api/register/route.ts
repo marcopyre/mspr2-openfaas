@@ -17,7 +17,6 @@ function getAuthHeaders() {
   };
 }
 
-// Simulation de l'appel aux fonctions OpenFaaS
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -30,11 +29,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Simulation de l'appel à la fonction OpenFaaS de génération de mot de passe
-    // Dans un environnement réel, cela appellerait l'API OpenFaaS
     const passwordResponse = await generatePassword(username);
 
-    // Simulation de l'appel à la fonction OpenFaaS de génération de TOTP
     const totpResponse = await generateTOTP(username);
 
     return NextResponse.json({
@@ -52,11 +48,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Simulation des fonctions OpenFaaS
 async function generatePassword(username: string) {
-  // Dans un environnement réel, cela appellerait l'API OpenFaaS
-  // Simulation d'un QR code contenant un mot de passe
-
   const passwordResponse = await fetch(
     `${OPENFAAS_GATEWAY}/function/generate-password`,
     {
@@ -65,8 +57,6 @@ async function generatePassword(username: string) {
       body: JSON.stringify({ username }),
     }
   );
-
-  console.log(passwordResponse);
 
   if (!passwordResponse.ok) {
     throw new Error(
@@ -78,14 +68,11 @@ async function generatePassword(username: string) {
 
   return {
     success: true,
-    qrCode: data.qrCode, // ou `data` directement selon la structure
+    qrCode: data.qrCode,
   };
 }
 
 async function generateTOTP(username: string) {
-  // Dans un environnement réel, cela appellerait l'API OpenFaaS
-  // Simulation d'un QR code pour l'authentification TOTP
-
   const totpResponse = await fetch(
     `${OPENFAAS_GATEWAY}/function/generate-totp`,
     {
@@ -95,10 +82,13 @@ async function generateTOTP(username: string) {
     }
   );
 
-  console.log(totpResponse);
+  if (!totpResponse.ok) {
+    throw new Error(`TOTP function failed: ${await totpResponse.text()}`);
+  }
 
+  const data = await totpResponse.json();
   return {
     success: true,
-    qrCode: totpResponse,
+    qrCode: data.qrCode,
   };
 }

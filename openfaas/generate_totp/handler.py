@@ -18,7 +18,7 @@ def get_db_connection():
         host=os.environ.get('DB_HOST', 'postgres'),
         database=os.environ.get('DB_NAME', 'cofrap'),
         user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('DB_PASSWORD', 'postgres')
+        password=get_secret('db-password')
     )
     return conn
 
@@ -111,7 +111,7 @@ def handle(req):
         return json.dumps({
             "success": True,
             "username": username,
-            "qrCode": qr_code
+            "qrCode": totp_uri
         })
         
     except Exception as e:

@@ -6,13 +6,17 @@ import pyotp
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
+def get_secret(key):
+    with open("/var/openfaas/secrets/{}".format(key)) as f:
+        return f.read().strip()
+
 def get_db_connection():
     """Établit une connexion à la base de données PostgreSQL"""
     conn = psycopg2.connect(
         host=os.environ.get('DB_HOST', 'postgres'),
         database=os.environ.get('DB_NAME', 'cofrap'),
         user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('DB_PASSWORD', 'postgres')
+        password=get_secret('db-password')
     )
     return conn
 

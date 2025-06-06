@@ -79,14 +79,13 @@ metadata:
   name: postgres-init-script
 data:
   init.sql: |
-    DROP TABLE IF EXISTS users CASCADE;
-    CREATE TABLE users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(100) NOT NULL UNIQUE,
-      password TEXT NULL,
-      mfa TEXT,
-      gendate BIGINT,
-      expired BOOLEAN DEFAULT FALSE
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password TEXT,
+        mfa TEXT,
+        gendate BIGINT,
+        expired BOOLEAN DEFAULT FALSE
     );
     CREATE INDEX IF NOT EXISTS idx_username ON users(username);
 ---

@@ -1,17 +1,21 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import QRCode from "qrcode"
-import { Card, CardContent } from "@/components/ui/card"
+import { useEffect, useRef } from "react";
+import QRCode from "qrcode";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface QRCodeDisplayProps {
-  value: string
-  title?: string
-  size?: number
+  value: string;
+  title?: string;
+  size?: number;
 }
 
-export default function QRCodeDisplay({ value, title, size = 200 }: QRCodeDisplayProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+export default function QRCodeDisplay({
+  value,
+  title,
+  size = 200,
+}: QRCodeDisplayProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (canvasRef.current && value) {
@@ -27,11 +31,11 @@ export default function QRCodeDisplay({ value, title, size = 200 }: QRCodeDispla
           },
         },
         (error) => {
-          if (error) console.error("Error generating QR code:", error)
-        },
-      )
+          if (error) console.error("Error generating QR code:", error);
+        }
+      );
     }
-  }, [value, size])
+  }, [value, size]);
 
   return (
     <Card className="overflow-hidden">
@@ -42,5 +46,5 @@ export default function QRCodeDisplay({ value, title, size = 200 }: QRCodeDispla
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
