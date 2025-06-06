@@ -2,7 +2,6 @@ import json
 import os
 import string
 import random
-import qrcode
 import io
 import base64
 import psycopg2
@@ -48,26 +47,6 @@ def generate_password(length=24):
     
     return ''.join(password)
 
-def generate_qr_code(data):
-    """Génère un QR code à partir des données fournies"""
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Convertir l'image en base64
-    buffered = io.BytesIO()
-    img.save(buffered)
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    
-    return f"data:image/png;base64,{img_str}"
-
 def encrypt_data(data, key):
     """Chiffre les données avec la clé fournie"""
     f = Fernet(key)
@@ -85,9 +64,6 @@ def handle(req):
         
         # Générer un mot de passe
         password = generate_password()
-        
-        # Générer un QR code contenant le mot de passe
-        qr_code = generate_qr_code(password)
         
         # Récupérer la clé de chiffrement depuis les variables d'environnement
         encryption_key = get_secret('encryption-key')

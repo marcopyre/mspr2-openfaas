@@ -2,7 +2,6 @@ import json
 import os
 import base64
 import io
-import qrcode
 import psycopg2
 import pyotp
 from cryptography.fernet import Fernet
@@ -31,23 +30,6 @@ def generate_totp_uri(username, secret, issuer="COFRAP"):
     totp = pyotp.TOTP(secret)
     return totp.provisioning_uri(name=username, issuer_name=issuer)
 
-def generate_qr_code(data):
-    """Génère un QR code à partir des données fournies"""
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    
-    # Convertir l'image en base64
-    buffered = io.BytesIO()
-    img.save(buffered)
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return f"data:image/png;base64,{img_str}"
 
 def encrypt_data(data, key):
     """Chiffre les données avec la clé fournie"""
@@ -71,7 +53,6 @@ def handle(req):
         totp_uri = generate_totp_uri(username, totp_secret)
         
         # Générer un QR code contenant l'URI TOTP
-        qr_code = generate_qr_code(totp_uri)
         
         # Récupérer la clé de chiffrement depuis les variables d'environnement
         encryption_key = get_secret('encryption-key')
