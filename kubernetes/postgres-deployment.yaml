@@ -35,43 +35,43 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: postgres:15
-        ports:
-        - containerPort: 5432
-        env:
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: POSTGRES_PASSWORD
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: POSTGRES_USER
-        - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: POSTGRES_DB
-        volumeMounts:
-        - name: postgres-data
-          mountPath: /var/lib/postgresql/data
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
-      - name: init-script
-        configMap:
-          name: postgres-init-script
+        - name: init-script
+          configMap:
+            name: postgres-init-script
   volumeClaimTemplates:
-  - metadata:
-      name: postgres-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -79,13 +79,14 @@ metadata:
   name: postgres-init-script
 data:
   init.sql: |
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) NOT NULL UNIQUE,
-        password TEXT,
-        mfa TEXT,
-        gendate BIGINT,
-        expired BOOLEAN DEFAULT FALSE
+    DROP TABLE IF EXISTS users CASCADE;
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(100) NOT NULL UNIQUE,
+      password TEXT NULL,
+      mfa TEXT,
+      gendate BIGINT,
+      expired BOOLEAN DEFAULT FALSE
     );
     CREATE INDEX IF NOT EXISTS idx_username ON users(username);
 ---
@@ -97,6 +98,6 @@ spec:
   selector:
     app: postgres
   ports:
-  - port: 5432
-    targetPort: 5432
+    - port: 5432
+      targetPort: 5432
   type: ClusterIP

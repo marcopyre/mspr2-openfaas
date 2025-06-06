@@ -6,11 +6,12 @@ functions:
   generate-totp:
     lang: python3-flask
     handler: ./generate_totp
-    image: marcopyre/generate-password:latest
+    image: marcopyre/generate-totp:latest
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres.cofrap.svc.cluster.local
       DB_NAME: cofrap
       DB_USER: postgres
+      DB_PASSWORD: postgres_password
     secrets:
       - encryption-key
       - db-password

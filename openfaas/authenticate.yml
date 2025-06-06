@@ -6,11 +6,12 @@ functions:
   authenticate:
     lang: python3-flask
     handler: ./authenticate
-    image: marcopyre/generate-password:latest
+    image: marcopyre/authenticate:latest
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres.cofrap.svc.cluster.local
       DB_NAME: cofrap
       DB_USER: postgres
+      DB_PASSWORD: postgres_password
     secrets:
       - encryption-key
       - db-password

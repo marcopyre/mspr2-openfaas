@@ -1,8 +1,5 @@
-flask
-waitress
-tox==3.*
+flask==2.0.1
 psycopg2-binary==2.9.3
 qrcode==7.3.1
-cryptography==36.0.1
-pyotp
 pillow==9.0.0
+cryptography==36.0.1
