@@ -31,6 +31,13 @@ export async function POST(request: Request) {
 
     const authResponse = await authenticateUser(username, password, totpCode);
 
+    if (!authResponse.success) {
+      return NextResponse.json(
+        { message: authResponse.message },
+        { status: 401 }
+      );
+    }
+
     if (authResponse.expired) {
       // Si les identifiants ont expiré, générer de nouveaux identifiants
       const passwordResponse = await generatePassword(username);
@@ -44,17 +51,7 @@ export async function POST(request: Request) {
       });
     }
 
-    if (!authResponse.success) {
-      return NextResponse.json(
-        { message: "Identifiants invalides" },
-        { status: 401 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      username,
-    });
+    return NextResponse.json(authResponse);
   } catch (error) {
     console.error("Error in auth API:", error);
     return NextResponse.json(
@@ -78,10 +75,13 @@ async function authenticateUser(
     }
   );
 
-  return {
-    success: true,
-    expired: authResponse,
-  };
+  if (!authResponse.ok) {
+    throw new Error(`Password function failed: ${await authResponse.text()}`);
+  }
+
+  const data = await authResponse.json();
+
+  return data;
 }
 
 async function generatePassword(username: string) {

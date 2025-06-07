@@ -52,7 +52,7 @@ def handle(req):
             return json.dumps({"success": False, "message": "Tous les champs sont requis"})
         
         # Récupérer la clé de chiffrement depuis les variables d'environnement
-        encryption_key = os.environ.get('ENCRYPTION_KEY')
+        encryption_key = get_secret('encryption-key')
         if not encryption_key:
             return json.dumps({"success": False, "message": "Clé de chiffrement non configurée"})
         
@@ -77,17 +77,6 @@ def handle(req):
             conn.close()
             return json.dumps({"success": True, "expired": True})
         
-        # Vérifier si les identifiants ont expiré (plus de 6 mois)
-        if check_expiration(gendate):
-            # Marquer les identifiants comme expirés
-            cursor.execute(
-                "UPDATE users SET expired = %s WHERE id = %s",
-                (True, user_id)
-            )
-            conn.commit()
-            conn.close()
-            return json.dumps({"success": True, "expired": True})
-        
         # Déchiffrer le mot de passe et le secret TOTP
         try:
             decrypted_password = decrypt_data(encrypted_password, encryption_key)
@@ -105,6 +94,17 @@ def handle(req):
         if not verify_totp(decrypted_mfa, totp_code):
             conn.close()
             return json.dumps({"success": False, "message": "Code d'authentification incorrect"})
+
+        # Vérifier si les identifiants ont expiré (plus de 6 mois)
+        if check_expiration(gendate):
+            # Marquer les identifiants comme expirés
+            cursor.execute(
+                "UPDATE users SET expired = %s WHERE id = %s",
+                (True, user_id)
+            )
+            conn.commit()
+            conn.close()
+            return json.dumps({"success": True, "expired": True})
         
         # Authentification réussie
         conn.close()

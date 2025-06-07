@@ -1,62 +1,67 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { User, Lock, KeyRound } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { User, Lock, KeyRound } from "lucide-react";
 
 interface LoginFormProps {
-  onSuccess: () => void
-  onError: (message: string) => void
-  onExpired: (data: any) => void
+  onSuccess: () => void;
+  onError: (message: string) => void;
+  onExpired: (data: any) => void;
 }
 
-export default function LoginForm({ onSuccess, onError, onExpired }: LoginFormProps) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [totpCode, setTotpCode] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+export default function LoginForm({
+  onSuccess,
+  onError,
+  onExpired,
+}: LoginFormProps) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!username || !password || !totpCode) {
-      onError("Veuillez remplir tous les champs")
-      return
+      onError("Veuillez remplir tous les champs");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // Simulation d'appel à l'API OpenFaaS
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password, totpCode }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Erreur d'authentification")
+        throw new Error(data.message || "Erreur d'authentification");
       }
 
       if (data.expired) {
-        onExpired(data)
+        onExpired(data);
       } else {
-        onSuccess()
+        onSuccess();
       }
     } catch (error) {
-      onError(error instanceof Error ? error.message : "Une erreur est survenue")
+      onError(
+        error instanceof Error ? error.message : "Une erreur est survenue"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,5 +114,5 @@ export default function LoginForm({ onSuccess, onError, onExpired }: LoginFormPr
         {isLoading ? "Authentification..." : "Se connecter"}
       </Button>
     </form>
-  )
+  );
 }
