@@ -1,7 +1,5 @@
 # Documentation Technique - Système de Gestion des Comptes Utilisateurs COFRAP
 
----
-
 ## 1. Vue d'ensemble
 
 ### 1.1 Objectif du projet
