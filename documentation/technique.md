@@ -1,28 +1,5 @@
 # Documentation Technique - Système de Gestion des Comptes Utilisateurs COFRAP
 
-**Version :** 1.0  
-**Date :** Juin 2025  
-**Auteur :** Équipe COFRAP  
-**Statut :** Production
-
----
-
-## Table des matières
-
-1. [Vue d'ensemble](#vue-densemble)
-2. [Architecture technique](#architecture-technique)
-3. [Composants du système](#composants-du-système)
-4. [Base de données](#base-de-données)
-5. [Fonctions serverless](#fonctions-serverless)
-6. [Interface utilisateur](#interface-utilisateur)
-7. [Sécurité](#sécurité)
-8. [Déploiement](#déploiement)
-9. [Configuration](#configuration)
-10. [API](#api)
-11. [Tests](#tests)
-12. [Maintenance](#Maintenance)
-13. [Dépannage](#dépannage)
-
 ---
 
 ## 1. Vue d'ensemble
@@ -117,7 +94,6 @@ PostgreSQL Database
 - **Version** : PostgreSQL 15
 - **Déploiement** : StatefulSet avec PVC
 - **Stockage** : 1 Go (extensible)
-- **Sauvegardes** : Quotidiennes (30 jours de rétention)
 
 ---
 
@@ -220,9 +196,9 @@ CREATE INDEX idx_username ON users(username);
 
 1. Génération d'un secret TOTP aléatoire
 2. Création de l'URI TOTP
-3. Génération du QR code
-4. Chiffrement du secret
-5. Mise à jour en base de données
+3. Chiffrement du secret
+4. Mise à jour en base de données
+5. Retour du résultat
 
 ### 5.3 authenticate
 
@@ -253,10 +229,10 @@ CREATE INDEX idx_username ON users(username);
 **Traitement :**
 
 1. Récupération des données utilisateur
-2. Vérification de l'expiration (6 mois)
-3. Déchiffrement du mot de passe et du secret TOTP
-4. Validation du mot de passe
-5. Vérification du code TOTP
+2. Déchiffrement du mot de passe et du secret TOTP
+3. Validation du mot de passe
+4. Vérification du code TOTP
+5. Vérification de l'expiration (6 mois)
 6. Retour du résultat d'authentification
 
 ---
@@ -279,9 +255,9 @@ CREATE INDEX idx_username ON users(username);
 
 2. **Formulaire d'inscription** (`components/register-form.tsx`)
 
-   - Champs : prénom, nom, mot de passe, confirmation
+   - Champs : username, email
    - Validation côté client
-   - Génération automatique du nom d'utilisateur
+   - Génération automatique du mot de passe
 
 3. **Formulaire de connexion** (`components/login-form.tsx`)
 
@@ -365,7 +341,7 @@ encryption-key: <base64-encoded-fernet-key>
 1. **Démarrage du cluster**
 
    ```bash
-   minikube start --memory=4096 --cpus=2
+   minikube start
    ```
 
 2. **Déploiement PostgreSQL**
@@ -419,20 +395,23 @@ cofrap-user-management/
 │ ├── ui/
 │ ├── login-form.tsx
 │ ├── qr-code-display.tsx
+│ ├── theme-provider.tsx
 │ └── register-form.tsx
+├── hooks/
+│ ├── use-mobile.tsx
+│ └── use-toast.ts
 ├── kubernetes/
 │ ├── frontend-deployment.yaml
 │ ├── openfaas-secrets.yaml
+│ ├── openfaas-values.yaml
 │ └── postgres-deployment.yaml
 ├── openfaas/
 │ ├── authenticate/
 │ ├── create_user/
 │ ├── generate_totp/
 │ ├── authenticate.yml
-│ ├── create_user.yml
+│ ├── generate_password.yml
 │ └── generate_totp.yml
-├── database/
-│ └── init.sql
 ├── Dockerfile
 ├── package.json
 └── README.md
@@ -551,7 +530,7 @@ basicAuth: true
 {
   "success": true,
   "expired": true,
-  "totpQr": "data:image/png;base64,..."
+  "totpQr": "ABCDEF!@#$%"
 }
 ```
 
@@ -567,19 +546,7 @@ basicAuth: true
 
 ## 11. Tests
 
-### 11.1 Tests unitaires
-
-**Framework :** Jest + React Testing Library
-
-**Commandes :**
-
-```bash
-npm test # Exécuter les tests
-npm run test:watch # Mode watch
-npm run test:coverage # Couverture de code
-```
-
-### 11.2 Tests d'intégration
+### 11.1 Tests d'intégration
 
 **Outils :** Postman/Newman, curl
 
@@ -640,28 +607,6 @@ kubectl exec -it postgres-0 -- pg_dump -U postgres cofrap > backup.sql
 kubectl exec -i postgres-0 -- psql -U postgres cofrap < backup.sql
 ```
 
-**Configuration automatique :**
-
-```yaml
-
-# CronJob pour sauvegardes quotidiennes
-
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-name: postgres-backup
-spec:
-schedule: "0 2 \* \* \*" # Tous les jours à 2h
-jobTemplate:
-spec:
-template:
-spec:
-containers: - name: postgres-backup
-image: postgres:15
-command: ["/bin/bash"]
-args: ["-c", "pg_dump -h postgres -U postgres cofrap > /backup/backup-$(date +%Y%m%d).sql"]
-```
-
 ### 12.3 Mise à jour
 
 **Fonctions OpenFaaS :**
@@ -684,125 +629,4 @@ faas-cli deploy -f function.yml
 docker build -t cofrap-frontend:latest .
 minikube image load cofrap-frontend:latest
 kubectl rollout restart deployment cofrap-frontend
-```
-
----
-
-## 13. Dépannage
-
-### 13.1 Problèmes courants
-
-#### 13.1.1 Fonction OpenFaaS ne démarre pas
-
-**Symptômes :** Pod en état `CrashLoopBackOff`
-
-**Diagnostic :**
-
-```bash
-kubectl -n openfaas-fn logs -l faas_function=create-user
-```
-
-**Solutions courantes :**
-
-- Vérifier les secrets Kubernetes
-- Contrôler les variables d'environnement
-- Valider la syntaxe Python
-
-#### 13.1.2 Erreur de connexion à la base de données
-
-**Symptômes :** `psycopg2.OperationalError`
-
-**Diagnostic :**
-
-```bash
-kubectl get pods -l app=postgres
-kubectl logs postgres-0
-```
-
-**Solutions :**
-
-- Vérifier que PostgreSQL est démarré
-- Contrôler les credentials
-- Tester la connectivité réseau
-
-#### 13.1.3 Interface web inaccessible
-
-**Symptômes :** `ImagePullBackOff` ou `ErrImagePull`
-
-**Solutions :**
-
-```bash
-
-# Vérifier l'image locale
-
-minikube image ls | grep cofrap-frontend
-
-# Recharger l'image
-
-minikube image load cofrap-frontend:latest
-
-# Redémarrer le déploiement
-
-kubectl rollout restart deployment cofrap-frontend
-```
-
-### 13.2 Logs utiles
-
-```bash
-
-# Logs OpenFaaS Gateway
-
-kubectl -n openfaas logs deployment/gateway
-
-# Logs d'une fonction spécifique
-
-kubectl -n openfaas-fn logs -l faas_function=authenticate
-
-# Logs PostgreSQL
-
-kubectl logs postgres-0
-
-# Logs interface web
-
-kubectl logs -l app=cofrap-frontend
-```
-
-### 13.3 Commandes de diagnostic
-
-```bash
-
-# État général du cluster
-
-kubectl get pods --all-namespaces
-
-# État des fonctions OpenFaaS
-
-faas-cli list
-
-# Test de connectivité base de données
-
-kubectl exec -it postgres-0 -- psql -U postgres -c "\l"
-
-# Test des secrets
-
-kubectl -n openfaas-fn get secrets
-```
-
----
-
-## Annexes
-
-### A.1 Génération de clé Fernet
-
-```python
-from cryptography.fernet import Fernet
-
-# Générer une nouvelle clé
-key = Fernet.generate_key()
-print(key.decode())
-
-# Encoder en base64 pour Kubernetes
-import base64
-encoded_key = base64.b64encode(key).decode()
-print(encoded_key)
 ```
