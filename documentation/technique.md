@@ -20,7 +20,7 @@
 9. [Configuration](#configuration)
 10. [API](#api)
 11. [Tests](#tests)
-12. [Maintenance](#maintenance)
+12. [Maintenance](#Maintenance)
 13. [Dépannage](#dépannage)
 
 ---
@@ -58,7 +58,7 @@ Le système de gestion des comptes utilisateurs COFRAP est une solution serverle
 
 Le système suit une architecture serverless distribuée sur un cluster Kubernetes :
 
-\`\`\`
+```
 Interface Web (Next.js)
 ↓
 API Routes
@@ -68,7 +68,7 @@ OpenFaaS Gateway
 Fonctions Python (create-user, generate-totp, authenticate)
 ↓
 PostgreSQL Database
-\`\`\`
+```
 
 ### 2.2 Composants principaux
 
@@ -125,7 +125,7 @@ PostgreSQL Database
 
 ### 4.1 Schéma de la table `users`
 
-\`\`\`sql
+```sql
 CREATE TABLE users (
 id SERIAL PRIMARY KEY,
 username VARCHAR(100) NOT NULL UNIQUE,
@@ -136,7 +136,7 @@ mfa TEXT,
 gendate BIGINT,
 expired BOOLEAN DEFAULT FALSE
 );
-\`\`\`
+```
 
 ### 4.2 Description des champs
 
@@ -153,9 +153,9 @@ expired BOOLEAN DEFAULT FALSE
 
 ### 4.3 Index
 
-\`\`\`sql
+```sql
 CREATE INDEX idx_username ON users(username);
-\`\`\`
+```
 
 ---
 
@@ -166,23 +166,25 @@ CREATE INDEX idx_username ON users(username);
 **Objectif :** Créer un nouvel utilisateur avec mot de passe chiffré
 
 **Entrée :**
-\`\`\`json
+
+```json
 {
-"username": "dupont.jean",
-"password": "motdepasse123",
-"firstName": "Jean",
-"lastName": "Dupont"
+  "username": "dupont.jean",
+  "password": "motdepasse123",
+  "firstName": "Jean",
+  "lastName": "Dupont"
 }
-\`\`\`
+```
 
 **Sortie :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"username": "dupont.jean",
-"message": "Utilisateur créé avec succès"
+  "success": true,
+  "username": "dupont.jean",
+  "message": "Utilisateur créé avec succès"
 }
-\`\`\`
+```
 
 **Traitement :**
 
@@ -197,20 +199,22 @@ CREATE INDEX idx_username ON users(username);
 **Objectif :** Générer un secret TOTP et son QR code pour l'authentification 2FA
 
 **Entrée :**
-\`\`\`json
+
+```json
 {
-"username": "dupont.jean"
+  "username": "dupont.jean"
 }
-\`\`\`
+```
 
 **Sortie :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"username": "dupont.jean",
-"qrCode": "data:image/png;base64,..."
+  "success": true,
+  "username": "dupont.jean",
+  "qrCode": "data:image/png;base64,..."
 }
-\`\`\`
+```
 
 **Traitement :**
 
@@ -225,24 +229,26 @@ CREATE INDEX idx_username ON users(username);
 **Objectif :** Authentifier un utilisateur avec mot de passe et code 2FA
 
 **Entrée :**
-\`\`\`json
+
+```json
 {
-"username": "dupont.jean",
-"password": "motdepasse123",
-"totpCode": "123456"
+  "username": "dupont.jean",
+  "password": "motdepasse123",
+  "totpCode": "123456"
 }
-\`\`\`
+```
 
 **Sortie :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"username": "dupont.jean",
-"firstName": "Jean",
-"lastName": "Dupont",
-"expired": false
+  "success": true,
+  "username": "dupont.jean",
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "expired": false
 }
-\`\`\`
+```
 
 **Traitement :**
 
@@ -320,7 +326,8 @@ CREATE INDEX idx_username ON users(username);
 ### 7.3 Gestion des secrets
 
 **Kubernetes Secrets :**
-\`\`\`yaml
+
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -329,7 +336,7 @@ namespace: openfaas-fn
 type: Opaque
 data:
 encryption-key: <base64-encoded-fernet-key>
-\`\`\`
+```
 
 ### 7.4 Rotation des identifiants
 
@@ -356,45 +363,50 @@ encryption-key: <base64-encoded-fernet-key>
 ### 8.2 Étapes de déploiement
 
 1. **Démarrage du cluster**
-   \`\`\`bash
+
+   ```bash
    minikube start --memory=4096 --cpus=2
-   \`\`\`
+   ```
 
 2. **Déploiement PostgreSQL**
-   \`\`\`bash
+
+   ```bash
    kubectl apply -f kubernetes/postgres-deployment.yaml
-   \`\`\`
+   ```
 
 3. **Installation OpenFaaS**
-   \`\`\`bash
+
+   ```bash
    helm repo add openfaas https://openfaas.github.io/faas-netes/
    helm install openfaas openfaas/openfaas \
     --namespace openfaas \
     --set functionNamespace=openfaas-fn
-   \`\`\`
+   ```
 
 4. **Création des secrets**
-   \`\`\`bash
+
+   ```bash
    kubectl apply -f kubernetes/openfaas-secrets.yaml
-   \`\`\`
+   ```
 
 5. **Déploiement des fonctions**
-   \`\`\`bash
+
+   ```bash
    faas-cli deploy -f openfaas/create_user.yml
    faas-cli deploy -f openfaas/generate_totp.yml
    faas-cli deploy -f openfaas/authenticate.yml
-   \`\`\`
+   ```
 
 6. **Déploiement de l'interface web**
-   \`\`\`bash
+   ```bash
    docker build -t cofrap-frontend:latest .
    minikube image load cofrap-frontend:latest
    kubectl apply -f kubernetes/frontend-deployment.yaml
-   \`\`\`
+   ```
 
 ### 8.3 Structure des fichiers
 
-\`\`\`
+```
 cofrap-user-management/
 ├── app/
 │ ├── api/
@@ -424,7 +436,7 @@ cofrap-user-management/
 ├── Dockerfile
 ├── package.json
 └── README.md
-\`\`\`
+```
 
 ---
 
@@ -446,8 +458,7 @@ cofrap-user-management/
 
 ### 9.2 Secrets Kubernetes
 
-\`\`\`yaml
-
+```yaml
 # Clé de chiffrement
 
 encryption-key: <fernet-key-base64>
@@ -455,12 +466,11 @@ encryption-key: <fernet-key-base64>
 # Mot de passe base de données
 
 db-password: <postgres-password-base64>
-\`\`\`
+```
 
 ### 9.3 Configuration OpenFaaS
 
-\`\`\`yaml
-
+```yaml
 # openfaas-values.yaml
 
 functionNamespace: openfaas-fn
@@ -468,7 +478,7 @@ gateway:
 replicas: 1
 scaleFromZero: true
 basicAuth: true
-\`\`\`
+```
 
 ---
 
@@ -481,70 +491,77 @@ basicAuth: true
 **Description :** Créer un nouveau compte utilisateur
 
 **Corps de la requête :**
-\`\`\`json
+
+```json
 {
-"firstName": "Jean",
-"lastName": "Dupont",
-"password": "motdepasse123"
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "password": "motdepasse123"
 }
-\`\`\`
+```
 
 **Réponse succès (200) :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"username": "dupont.jean",
-"firstName": "Jean",
-"lastName": "Dupont",
-"totpQr": "data:image/png;base64,..."
+  "success": true,
+  "username": "dupont.jean",
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "totpQr": "data:image/png;base64,..."
 }
-\`\`\`
+```
 
 **Réponse erreur (400) :**
-\`\`\`json
+
+```json
 {
-"message": "Un utilisateur avec ce nom existe déjà"
+  "message": "Un utilisateur avec ce nom existe déjà"
 }
-\`\`\`
+```
 
 #### POST /api/auth
 
 **Description :** Authentifier un utilisateur
 
 **Corps de la requête :**
-\`\`\`json
+
+```json
 {
-"username": "dupont.jean",
-"password": "motdepasse123",
-"totpCode": "123456"
+  "username": "dupont.jean",
+  "password": "motdepasse123",
+  "totpCode": "123456"
 }
-\`\`\`
+```
 
 **Réponse succès (200) :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"username": "dupont.jean",
-"firstName": "Jean",
-"lastName": "Dupont"
+  "success": true,
+  "username": "dupont.jean",
+  "firstName": "Jean",
+  "lastName": "Dupont"
 }
-\`\`\`
+```
 
 **Réponse expiration (200) :**
-\`\`\`json
+
+```json
 {
-"success": true,
-"expired": true,
-"totpQr": "data:image/png;base64,..."
+  "success": true,
+  "expired": true,
+  "totpQr": "data:image/png;base64,..."
 }
-\`\`\`
+```
 
 **Réponse erreur (401) :**
-\`\`\`json
+
+```json
 {
-"message": "Mot de passe incorrect"
+  "message": "Mot de passe incorrect"
 }
-\`\`\`
+```
 
 ---
 
@@ -555,37 +572,39 @@ basicAuth: true
 **Framework :** Jest + React Testing Library
 
 **Commandes :**
-\`\`\`bash
+
+```bash
 npm test # Exécuter les tests
 npm run test:watch # Mode watch
 npm run test:coverage # Couverture de code
-\`\`\`
+```
 
 ### 11.2 Tests d'intégration
 
 **Outils :** Postman/Newman, curl
 
 **Exemple de test :**
-\`\`\`bash
+
+```bash
 
 # Test de création d'utilisateur
 
 curl -X POST http://localhost:8080/function/create-user \
  -H "Content-Type: application/json" \
  -d '{"username":"test.user","password":"password123","firstName":"Test","lastName":"User"}'
-\`\`\`
+```
 
 ### 11.3 Tests de charge
 
 **Outil :** Apache Bench (ab)
 
-\`\`\`bash
+```bash
 
 # Test de charge sur l'authentification
 
 ab -n 1000 -c 10 -p auth_data.json -T application/json \
  http://localhost:8080/function/authenticate
-\`\`\`
+```
 
 ---
 
@@ -609,7 +628,8 @@ ab -n 1000 -c 10 -p auth_data.json -T application/json \
 ### 12.2 Sauvegardes
 
 **Base de données :**
-\`\`\`bash
+
+```bash
 
 # Sauvegarde manuelle
 
@@ -618,10 +638,11 @@ kubectl exec -it postgres-0 -- pg_dump -U postgres cofrap > backup.sql
 # Restauration
 
 kubectl exec -i postgres-0 -- psql -U postgres cofrap < backup.sql
-\`\`\`
+```
 
 **Configuration automatique :**
-\`\`\`yaml
+
+```yaml
 
 # CronJob pour sauvegardes quotidiennes
 
@@ -639,29 +660,31 @@ containers: - name: postgres-backup
 image: postgres:15
 command: ["/bin/bash"]
 args: ["-c", "pg_dump -h postgres -U postgres cofrap > /backup/backup-$(date +%Y%m%d).sql"]
-\`\`\`
+```
 
 ### 12.3 Mise à jour
 
 **Fonctions OpenFaaS :**
-\`\`\`bash
+
+```bash
 
 # Mise à jour d'une fonction
 
 faas-cli build -f function.yml
 faas-cli push -f function.yml
 faas-cli deploy -f function.yml
-\`\`\`
+```
 
 **Interface web :**
-\`\`\`bash
+
+```bash
 
 # Reconstruction et redéploiement
 
 docker build -t cofrap-frontend:latest .
 minikube image load cofrap-frontend:latest
 kubectl rollout restart deployment cofrap-frontend
-\`\`\`
+```
 
 ---
 
@@ -674,9 +697,10 @@ kubectl rollout restart deployment cofrap-frontend
 **Symptômes :** Pod en état `CrashLoopBackOff`
 
 **Diagnostic :**
-\`\`\`bash
+
+```bash
 kubectl -n openfaas-fn logs -l faas_function=create-user
-\`\`\`
+```
 
 **Solutions courantes :**
 
@@ -689,10 +713,11 @@ kubectl -n openfaas-fn logs -l faas_function=create-user
 **Symptômes :** `psycopg2.OperationalError`
 
 **Diagnostic :**
-\`\`\`bash
+
+```bash
 kubectl get pods -l app=postgres
 kubectl logs postgres-0
-\`\`\`
+```
 
 **Solutions :**
 
@@ -705,7 +730,8 @@ kubectl logs postgres-0
 **Symptômes :** `ImagePullBackOff` ou `ErrImagePull`
 
 **Solutions :**
-\`\`\`bash
+
+```bash
 
 # Vérifier l'image locale
 
@@ -718,11 +744,11 @@ minikube image load cofrap-frontend:latest
 # Redémarrer le déploiement
 
 kubectl rollout restart deployment cofrap-frontend
-\`\`\`
+```
 
 ### 13.2 Logs utiles
 
-\`\`\`bash
+```bash
 
 # Logs OpenFaaS Gateway
 
@@ -739,11 +765,11 @@ kubectl logs postgres-0
 # Logs interface web
 
 kubectl logs -l app=cofrap-frontend
-\`\`\`
+```
 
 ### 13.3 Commandes de diagnostic
 
-\`\`\`bash
+```bash
 
 # État général du cluster
 
@@ -760,7 +786,7 @@ kubectl exec -it postgres-0 -- psql -U postgres -c "\l"
 # Test des secrets
 
 kubectl -n openfaas-fn get secrets
-\`\`\`
+```
 
 ---
 
