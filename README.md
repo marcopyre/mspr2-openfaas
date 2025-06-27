@@ -5,7 +5,7 @@ minikube start
 ## Appliquer le fichier de déploiement PostgreSQL
 
 kubectl create namespace cofrap
-kubectl apply -f kubernetes/postgres-deployment.yaml
+kubectl apply -n cofrap -f kubernetes/postgres-deployment.yaml
 
 ## Ajouter le repo Helm d'OpenFaaS
 
