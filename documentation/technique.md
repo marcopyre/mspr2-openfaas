@@ -363,10 +363,19 @@ encryption-key: <base64-encoded-fernet-key>
    kubectl apply -f kubernetes/openfaas-secrets.yaml
    ```
 
+4.1. **Pour windows**
+  ```bash
+  echo 'iQtsankDoUzICAUgo6g8cFIQwvQrTaCjNp7k7irMLoo=' | \
+  l -n openfaas-fn>   kubectl -n openfaas-fn create secret generic encryption-key --from-file=encryption-key=/dev/stdin
+
+  kubectl -n openfaas-fn create secret generic db-password \
+n 'cG9zdGdyZXNfc>   --from-literal=db-password=$(echo -n 'cG9zdGdyZXNfcGFzc3dvcmQ=' | base64 --decode)
+  ```
+
 5. **Déploiement des fonctions**
 
    ```bash
-   faas-cli deploy -f openfaas/create_user.yml
+   faas-cli deploy -f openfaas/generate_password.yml
    faas-cli deploy -f openfaas/generate_totp.yml
    faas-cli deploy -f openfaas/authenticate.yml
    ```

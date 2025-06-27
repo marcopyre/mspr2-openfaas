@@ -44,6 +44,14 @@ echo -n $PASSWORD | faas-cli login --username admin --password-stdin
 
 kubectl apply -f kubernetes/openfaas-secrets.yaml
 
+```sh
+### Pour Windows
+
+echo 'iQtsankDoUzICAUgo6g8cFIQwvQrTaCjNp7k7irMLoo=' | kubectl -n openfaas-fn create secret generic encryption-key --from-file=encryption-key=/dev/stdin
+
+kubectl -n openfaas-fn create secret generic db-password --from-literal=db-password=$(echo -n 'cG9zdGdyZXNfcGFzc3dvcmQ=' | base64 --decode)
+```
+
 cd openfaas
 
 docker login
