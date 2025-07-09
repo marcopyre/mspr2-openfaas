@@ -333,6 +333,7 @@ encryption-key: <base64-encoded-fernet-key>
 - kubectl
 - Helm 3
 - minikube ou cluster Kubernetes
+- faas-cli
 
 ### 8.2 Étapes de déploiement
 
@@ -351,6 +352,8 @@ encryption-key: <base64-encoded-fernet-key>
 3. **Installation OpenFaaS**
 
    ```bash
+   kubectl create namespace openfaas
+   kubectl create namespace openfaas-fn
    helm repo add openfaas https://openfaas.github.io/faas-netes/
    helm install openfaas openfaas/openfaas \
     --namespace openfaas \
@@ -362,8 +365,15 @@ encryption-key: <base64-encoded-fernet-key>
    ```bash
    kubectl apply -f kubernetes/openfaas-secrets.yaml
    ```
+5. **Connexion a openfaas**
 
-4.1. **Pour windows**
+   ```bash
+   faas-cli template store pull python3-flask
+   kubectl port-forward -n openfaas svc/gateway 8080:8080 &
+   faas-cli login --password $(kubectl -n openfaas get secret basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode)
+   ```
+
+5.1. **Pour windows**
   ```bash
   echo 'iQtsankDoUzICAUgo6g8cFIQwvQrTaCjNp7k7irMLoo=' | \
   l -n openfaas-fn>   kubectl -n openfaas-fn create secret generic encryption-key --from-file=encryption-key=/dev/stdin
@@ -371,21 +381,31 @@ encryption-key: <base64-encoded-fernet-key>
   kubectl -n openfaas-fn create secret generic db-password \
 n 'cG9zdGdyZXNfc>   --from-literal=db-password=$(echo -n 'cG9zdGdyZXNfcGFzc3dvcmQ=' | base64 --decode)
   ```
+  5.2. **Pour linux**
+  ```bash
+  echo "iQtsankDoUzICAUgo6g8cFIQwvQrTaCjNp7k7irMLoo=" | faas-cli secret create encryption-key
 
-5. **Déploiement des fonctions**
+  echo "cG9zdGdyZXNfcGFzc3dvcmQ=" | faas-cli secret create db-password
+  ```
+
+6. **Déploiement des fonctions**
 
    ```bash
+   faas-cli template store pull python3-flask
    faas-cli deploy -f openfaas/generate_password.yml
    faas-cli deploy -f openfaas/generate_totp.yml
    faas-cli deploy -f openfaas/authenticate.yml
    ```
 
-6. **Déploiement de l'interface web**
+7. **Déploiement de l'interface web**
    ```bash
    docker build -t cofrap-frontend:latest .
    minikube image load cofrap-frontend:latest
    kubectl apply -f kubernetes/frontend-deployment.yaml
+   kubectl port-forward service/cofrap-frontend 3000:80
    ```
+
+  L'application est accessible a http://localhost:3000
 
 ### 8.3 Structure des fichiers
 

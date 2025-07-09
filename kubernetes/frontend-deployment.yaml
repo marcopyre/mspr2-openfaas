@@ -33,28 +33,10 @@ kind: Service
 metadata:
   name: cofrap-frontend
 spec:
+  type: NodePort
   selector:
     app: cofrap-frontend
   ports:
     - port: 80
       targetPort: 3000
-  type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: cofrap-frontend-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-    - host: cofrap.local
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: cofrap-frontend
-                port:
-                  number: 80
+      nodePort: 30000 
